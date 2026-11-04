@@ -1,0 +1,459 @@
+{
+  "units": {
+    "translation": "log position units (assumed mm)",
+    "rotation": "degrees"
+  },
+  "method": "Only valid arm2 records; break at invalid records, nonpositive time, gaps >150ms, serial reset, or instrument type change. Compare roughly 1-second windows. Noise-screening thresholds: 0.5 position units or 0.5 degrees per window.",
+  "files": [
+    {
+      "file": "20260826-125222-0000267045-AI.txt",
+      "rows": 12240,
+      "valid": 11311,
+      "invalid": 929,
+      "continuousRuns": 5,
+      "positionMin": [
+        -384.3998345016313,
+        -272.8070334533165,
+        955.8649261745335
+      ],
+      "positionMax": [
+        -95.96840715159988,
+        -25.319610833162972,
+        1034.846325096945
+      ],
+      "operations": {
+        "1": 7434,
+        "3": 704,
+        "4": 4102
+      },
+      "windows": 188,
+      "translationWindows": 66,
+      "rotationWindows": 69,
+      "topWindows": [
+        {
+          "start": "12:53:49.330",
+          "end": "12:53:50.339",
+          "duration": 1.0089999999981956,
+          "translation": 0.0008181430515123354,
+          "rotationDeg": 99.17454337739211,
+          "maxStepTranslation": 0.0008160209167444191,
+          "maxStepRotationDeg": 178.69765767849356,
+          "operationStart": 1,
+          "operationEnd": 1
+        },
+        {
+          "start": "12:55:19.935",
+          "end": "12:55:20.935",
+          "duration": 1,
+          "translation": 28.122710354714066,
+          "rotationDeg": 42.02043426477777,
+          "maxStepTranslation": 0.9948131361398033,
+          "maxStepRotationDeg": 1.4502294717242399,
+          "operationStart": 4,
+          "operationEnd": 4
+        },
+        {
+          "start": "12:53:48.000",
+          "end": "12:53:49.011",
+          "duration": 1.010999999998603,
+          "translation": 0.00001602194354402303,
+          "rotationDeg": 49.43049560389929,
+          "maxStepTranslation": 0.0008142005114190517,
+          "maxStepRotationDeg": 3.0861584427917284,
+          "operationStart": 1,
+          "operationEnd": 1
+        }
+      ],
+      "maxAdjacentTranslation": 278.79441600041343,
+      "maxAdjacentRotationDeg": 178.69765767849356,
+      "smoothExample": {
+        "start": "12:55:19.935",
+        "end": "12:55:20.935",
+        "duration": 1,
+        "translation": 28.122710354714066,
+        "rotationDeg": 42.02043426477777,
+        "maxStepTranslation": 0.9948131361398033,
+        "maxStepRotationDeg": 1.4502294717242399,
+        "operationStart": 4,
+        "operationEnd": 4
+      },
+      "maxDisplacementFromRunStart": 308.5295401107406,
+      "maxRotationFromRunStartDeg": 99.23449123470802
+    },
+    {
+      "file": "20260826-182358-0000004354-AI.txt",
+      "rows": 53954,
+      "valid": 43462,
+      "invalid": 10492,
+      "continuousRuns": 25,
+      "positionMin": [
+        -23.949036243795284,
+        -157.71119302053467,
+        1024.0071000986977
+      ],
+      "positionMax": [
+        55.82117531615948,
+        9.461223041159588,
+        1089.5508744476936
+      ],
+      "operations": {
+        "1": 37431,
+        "3": 1862,
+        "4": 14661
+      },
+      "windows": 719,
+      "translationWindows": 181,
+      "rotationWindows": 184,
+      "topWindows": [
+        {
+          "start": "18:33:09.815",
+          "end": "18:33:10.816",
+          "duration": 1.0010000000038417,
+          "translation": 0.000003944439850983932,
+          "rotationDeg": 118.74621320605875,
+          "maxStepTranslation": 0.000019530596603427686,
+          "maxStepRotationDeg": 178.44193909555324,
+          "operationStart": 1,
+          "operationEnd": 1
+        },
+        {
+          "start": "18:31:10.575",
+          "end": "18:31:11.591",
+          "duration": 1.0160000000032596,
+          "translation": 0.0000026238637276950606,
+          "rotationDeg": 107.96762506206889,
+          "maxStepTranslation": 0.000022013021316283104,
+          "maxStepRotationDeg": 179.43869572290524,
+          "operationStart": 1,
+          "operationEnd": 1
+        },
+        {
+          "start": "18:33:08.796",
+          "end": "18:33:09.815",
+          "duration": 1.0190000000002328,
+          "translation": 0.0008138094902088484,
+          "rotationDeg": 102.05901536405122,
+          "maxStepTranslation": 0.0008138323670092323,
+          "maxStepRotationDeg": 3.118120804727308,
+          "operationStart": 1,
+          "operationEnd": 1
+        }
+      ],
+      "maxAdjacentTranslation": 5.606646436639746,
+      "maxAdjacentRotationDeg": 179.43869572290524,
+      "smoothExample": {
+        "start": "18:30:16.054",
+        "end": "18:30:17.054",
+        "duration": 1,
+        "translation": 23.41137891579857,
+        "rotationDeg": 23.294747443881096,
+        "maxStepTranslation": 0.9838890467275617,
+        "maxStepRotationDeg": 0.9722175179514109,
+        "operationStart": 4,
+        "operationEnd": 4
+      },
+      "maxDisplacementFromRunStart": 89.50249027115014,
+      "maxRotationFromRunStartDeg": 179.39462565386563
+    },
+    {
+      "file": "20260826-183911-0000058848-AI.txt",
+      "rows": 66324,
+      "valid": 63691,
+      "invalid": 2633,
+      "continuousRuns": 22,
+      "positionMin": [
+        -195.87139479815835,
+        -151.95253780359897,
+        1034.3229710758026
+      ],
+      "positionMax": [
+        55.51275409307344,
+        103.61551249090296,
+        1161.5049364254817
+      ],
+      "operations": {
+        "1": 63527,
+        "3": 1627,
+        "4": 1170
+      },
+      "windows": 1054,
+      "translationWindows": 81,
+      "rotationWindows": 74,
+      "topWindows": [
+        {
+          "start": "18:40:13.050",
+          "end": "18:40:14.057",
+          "duration": 1.006999999997788,
+          "translation": 240.42253986337312,
+          "rotationDeg": 9.988506662061788,
+          "maxStepTranslation": 239.55825092613162,
+          "maxStepRotationDeg": 10.00128709704842,
+          "operationStart": 4,
+          "operationEnd": 4
+        },
+        {
+          "start": "18:40:16.084",
+          "end": "18:40:17.096",
+          "duration": 1.0120000000024447,
+          "translation": 239.49401189203346,
+          "rotationDeg": 10.000628967052572,
+          "maxStepTranslation": 239.49401189203346,
+          "maxStepRotationDeg": 10.000751466129282,
+          "operationStart": 4,
+          "operationEnd": 4
+        },
+        {
+          "start": "18:40:15.066",
+          "end": "18:40:16.084",
+          "duration": 1.0179999999963911,
+          "translation": 239.4717000825325,
+          "rotationDeg": 10.000751466129282,
+          "maxStepTranslation": 239.49401189203346,
+          "maxStepRotationDeg": 10.000751466129282,
+          "operationStart": 4,
+          "operationEnd": 4
+        }
+      ],
+      "maxAdjacentTranslation": 239.55825092613162,
+      "maxAdjacentRotationDeg": 10.00128709704842,
+      "smoothExample": {
+        "start": "18:40:09.034",
+        "end": "18:40:10.035",
+        "duration": 1.0010000000038417,
+        "translation": 19.847113958054727,
+        "rotationDeg": 10.10543345650771,
+        "maxStepTranslation": 1.488526020708979,
+        "maxStepRotationDeg": 0.756802052483971,
+        "operationStart": 4,
+        "operationEnd": 4
+      },
+      "maxDisplacementFromRunStart": 321.203075176833,
+      "maxRotationFromRunStartDeg": 36.08890999794127
+    },
+    {
+      "file": "20260826-185752-0000125865-AI.txt",
+      "rows": 66408,
+      "valid": 66408,
+      "invalid": 0,
+      "continuousRuns": 21,
+      "positionMin": [
+        20.618151308387446,
+        -164.51641628842418,
+        1045.4222291452256
+      ],
+      "positionMax": [
+        52.1722850288467,
+        -8.657060396035675,
+        1099.4966969572754
+      ],
+      "operations": {
+        "1": 52911,
+        "3": 3429,
+        "4": 10068
+      },
+      "windows": 1103,
+      "translationWindows": 176,
+      "rotationWindows": 186,
+      "topWindows": [
+        {
+          "start": "19:07:55.894",
+          "end": "19:07:56.894",
+          "duration": 1,
+          "translation": 0.000011534093836537983,
+          "rotationDeg": 170.37597425112386,
+          "maxStepTranslation": 0.0008140513294461576,
+          "maxStepRotationDeg": 179.73233351584312,
+          "operationStart": 1,
+          "operationEnd": 1
+        },
+        {
+          "start": "19:00:03.089",
+          "end": "19:00:04.089",
+          "duration": 1,
+          "translation": 0.0008152653806833129,
+          "rotationDeg": 124.44114377369037,
+          "maxStepTranslation": 0.0008138614888091736,
+          "maxStepRotationDeg": 177.47315623048195,
+          "operationStart": 1,
+          "operationEnd": 1
+        },
+        {
+          "start": "19:07:54.893",
+          "end": "19:07:55.894",
+          "duration": 1.0010000000038417,
+          "translation": 0.000002760341347338875,
+          "rotationDeg": 100.18734518794173,
+          "maxStepTranslation": 0.0008138233649394377,
+          "maxStepRotationDeg": 3.277921863888315,
+          "operationStart": 1,
+          "operationEnd": 1
+        }
+      ],
+      "maxAdjacentTranslation": 5.034692161235064,
+      "maxAdjacentRotationDeg": 179.73233351584312,
+      "smoothExample": {
+        "start": "19:04:43.226",
+        "end": "19:04:44.227",
+        "duration": 1.0010000000038417,
+        "translation": 21.162693299574837,
+        "rotationDeg": 23.833202240670733,
+        "maxStepTranslation": 0.9136202277597735,
+        "maxStepRotationDeg": 1.019992287541591,
+        "operationStart": 4,
+        "operationEnd": 4
+      },
+      "maxDisplacementFromRunStart": 98.20790239343754,
+      "maxRotationFromRunStartDeg": 179.75379547828067
+    },
+    {
+      "file": "20260826-191636-0000192981-AI.txt",
+      "rows": 66198,
+      "valid": 66198,
+      "invalid": 0,
+      "continuousRuns": 28,
+      "positionMin": [
+        14.355583595496483,
+        -171.8163808422983,
+        1033.9461502343202
+      ],
+      "positionMax": [
+        92.8169600763733,
+        -22.41464510771212,
+        1096.429907997207
+      ],
+      "operations": {
+        "1": 60583,
+        "3": 2682,
+        "4": 2933
+      },
+      "windows": 1097,
+      "translationWindows": 130,
+      "rotationWindows": 132,
+      "topWindows": [
+        {
+          "start": "19:24:30.102",
+          "end": "19:24:31.103",
+          "duration": 1.0010000000038417,
+          "translation": 0.0000023918316535517836,
+          "rotationDeg": 122.93699920750888,
+          "maxStepTranslation": 0.0008161527940877391,
+          "maxStepRotationDeg": 178.74755385866393,
+          "operationStart": 1,
+          "operationEnd": 1
+        },
+        {
+          "start": "19:24:29.096",
+          "end": "19:24:30.102",
+          "duration": 1.0059999999939464,
+          "translation": 0.0008141580670968729,
+          "rotationDeg": 100.77661158462803,
+          "maxStepTranslation": 0.0008139834398086238,
+          "maxStepRotationDeg": 3.090154521010423,
+          "operationStart": 1,
+          "operationEnd": 1
+        },
+        {
+          "start": "19:23:57.736",
+          "end": "19:23:58.746",
+          "duration": 1.0099999999947613,
+          "translation": 0.0000014306828222828072,
+          "rotationDeg": 99.99953853107665,
+          "maxStepTranslation": 0.000027982610497747452,
+          "maxStepRotationDeg": 179.74232469155808,
+          "operationStart": 1,
+          "operationEnd": 1
+        }
+      ],
+      "maxAdjacentTranslation": 8.602313572962661,
+      "maxAdjacentRotationDeg": 179.74232469155808,
+      "smoothExample": {
+        "start": "19:24:54.301",
+        "end": "19:24:55.302",
+        "duration": 1.0009999999892898,
+        "translation": 25.529433268209363,
+        "rotationDeg": 12.682725695593492,
+        "maxStepTranslation": 1.2952090810345402,
+        "maxStepRotationDeg": 0.6419058480531011,
+        "operationStart": 4,
+        "operationEnd": 4
+      },
+      "maxDisplacementFromRunStart": 100.83665961928448,
+      "maxRotationFromRunStartDeg": 178.72426149048212
+    },
+    {
+      "file": "20260826-193518-0000259929-AI.txt",
+      "rows": 6572,
+      "valid": 5710,
+      "invalid": 862,
+      "continuousRuns": 1,
+      "positionMin": [
+        -180.8699605235108,
+        -43.98589699728507,
+        1040.4943503852555
+      ],
+      "positionMax": [
+        26.305874974023105,
+        43.812812483012586,
+        1120.4937338458822
+      ],
+      "operations": {
+        "1": 6292,
+        "3": 145,
+        "4": 135
+      },
+      "windows": 95,
+      "translationWindows": 6,
+      "rotationWindows": 5,
+      "topWindows": [
+        {
+          "start": "19:36:52.050",
+          "end": "19:36:53.054",
+          "duration": 1.004000000000815,
+          "translation": 235.8864422048027,
+          "rotationDeg": 9.996380517769099,
+          "maxStepTranslation": 235.8837818817219,
+          "maxStepRotationDeg": 10.000013467002224,
+          "operationStart": 1,
+          "operationEnd": 4
+        },
+        {
+          "start": "19:35:29.424",
+          "end": "19:35:30.433",
+          "duration": 1.0090000000054715,
+          "translation": 18.89770782281065,
+          "rotationDeg": 8.784216620625706,
+          "maxStepTranslation": 2.539820802543584,
+          "maxStepRotationDeg": 1.30776156651009,
+          "operationStart": 1,
+          "operationEnd": 1
+        },
+        {
+          "start": "19:35:26.391",
+          "end": "19:35:27.407",
+          "duration": 1.0160000000032596,
+          "translation": 6.669531141665197,
+          "rotationDeg": 12.537694587165888,
+          "maxStepTranslation": 2.135825306557485,
+          "maxStepRotationDeg": 0.7691078363430183,
+          "operationStart": 3,
+          "operationEnd": 3
+        }
+      ],
+      "maxAdjacentTranslation": 235.8837818817219,
+      "maxAdjacentRotationDeg": 10.000013467002224,
+      "smoothExample": {
+        "start": "19:35:25.384",
+        "end": "19:35:26.391",
+        "duration": 1.006999999997788,
+        "translation": 7.259918314856881,
+        "rotationDeg": 4.215505786600892,
+        "maxStepTranslation": 1.6111960514229537,
+        "maxStepRotationDeg": 0.6740790657575316,
+        "operationStart": 1,
+        "operationEnd": 3
+      },
+      "maxDisplacementFromRunStart": 230.25418608601748,
+      "maxRotationFromRunStartDeg": 20.846127471607076
+    }
+  ]
+}

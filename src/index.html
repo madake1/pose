@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>POSE LAB · 位姿投影工作台</title><style>/* APP_CSS */</style></head>
+<body>
+<header><div class="brand"><span class="brand-mark">P</span><strong>POSE LAB</strong><span class="brand-sub">位姿投影工作台</span></div><div class="header-right"><span class="local-dot"></span> 本地 · 离线运行 <button id="exportConfig">导出参数</button><label class="button">导入参数<input id="importConfig" type="file" accept=".json" hidden></label><button id="resetConfig" class="quiet">恢复推荐参数</button></div></header>
+<div class="app">
+<aside><div class="side-heading"><span>控制台</span><span class="micro">PARAMETERS</span></div>
+<section class="files"><div class="section-label">01 <b>数据源</b></div><div class="file-actions"><label class="file-button">＋ 选择 TXT<input id="logFiles" type="file" accept=".txt" multiple hidden></label><label class="file-button">＋ 选择视频<input id="videoFile" type="file" accept="video/*,.mp4,.mov" hidden></label></div><select id="logSelect" aria-label="当前日志"><option>尚未选择日志</option></select><select id="segmentSelect" aria-label="日志时间片段" hidden></select><div id="fileInfo" class="hint">文件仅在本机读取，无需上传。</div><div id="videoInfo" class="hint ellipsis">尚未选择视频</div><progress id="parseProgress" value="0" max="1" hidden></progress></section>
+<section class="recommendation"><div class="section-label">日志推荐摆位</div><div id="recommendInfo" class="hint">读取日志后自动推荐相机视轴与视场角；器械朝向直接使用日志。</div><button id="restorePose">恢复推荐摆位</button><div class="hint">几何推荐 · 未经视频标定。恢复时保留时间对齐。</div></section><div id="parameters"></div>
+<section class="status-section"><div class="section-label">状态 / 当前采样</div><div id="armStatus"></div><div id="readout" class="hint">加载日志后显示位姿。</div></section>
+<div class="sidebar-foot">32767 自动隐藏 · 无效区间不插值<br>安装偏移使用各自局部坐标；旋转为 XYZ。</div>
+</aside>
+<main>
+<div class="workspace-heading"><div><span class="eyebrow">SYNCHRONIZED WORKSPACE</span><h1>多视图对齐</h1></div><div class="workspace-badges"><span id="dataBadge" class="badge">等待数据</span><span id="syncBadge" class="badge warn">尚未对齐</span></div></div>
+<div id="notice" role="status">选择 TXT 与视频开始；也可加载演示，检查模型与参数联动。<button id="loadDemo">加载演示</button></div>
+<div class="views">
+<article class="pane" id="scenePane"><div class="pane-head"><div><span class="number">01</span><b>3D 场景</b><small>自由观察</small></div><button id="homeView">恢复视角</button></div><div class="viewport" id="sceneView"><div class="view-tag">ROBOT BASE FRAME</div><div class="view-bottom">左键旋转 · 右键平移 · 滚轮缩放</div></div><div class="pane-foot"><span id="angleText">夹角：等待有效位姿</span><span class="legend"><i style="--c:#48d4b2"></i>1 <i style="--c:#f3bd68"></i>3 <i style="--c:#9b9bff"></i>4</span></div></article>
+<article class="pane" id="projectionPane"><div class="pane-head"><div><span class="number">02</span><b>相机投影</b><small>arm2 光学视角</small></div><span id="resolutionLabel" class="micro">1920 × 1080</span></div><div class="viewport camera-viewport" id="projectionView"><div class="crosshair"></div><div id="projectionMessage" class="empty-message">等待相机位姿</div><div class="view-tag">CAMERA / PROJECTION</div></div><div class="pane-foot"><span id="lensLabel">近似针孔投影</span><span id="cameraBadge">CAM 2</span></div></article>
+<article class="pane" id="overlayPane"><div class="pane-head"><div><span class="number">03</span><b>投影叠加</b><small>投影 + 真实视频</small></div><div><button id="muteVideo">静音</button><button id="toggleOverlay">隐藏投影</button></div></div><div class="viewport camera-viewport" id="overlayView"><canvas id="overlay"></canvas><div id="overlayEmpty" class="empty-message">选择视频后在这里查看叠加画面</div><div class="view-tag">COMPOSITE / ALIGNMENT</div></div><div class="pane-foot"><span id="overlayLabel">轮廓 · 70%</span><span id="videoClock">视频 00:00.000</span></div></article>
+</div>
+<video id="video" playsinline muted preload="metadata" hidden></video><span id="videoState" hidden>未加载</span>
+<footer class="transport"><div class="transport-top"><div class="transport-controls"><button id="stepBack" title="后退一视频帧">⏮</button><button id="play" class="play" title="播放或暂停">▶</button><button id="stepForward" title="前进一视频帧">⏭</button><select id="speed" aria-label="播放速度"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div><div class="time-readout"><span id="logClock">—</span><small>绝对时间</small></div><div class="transport-right"><span id="sampleText">0 / 0</span><span id="durationText">—</span></div></div><input id="timeline" type="range" min="0" max="1" step="0.001" value="0" aria-label="共同时间轴" disabled><div class="timeline-labels"><span id="startLabel">片段起点</span><span id="timelineHint">选择文件后启用公共时间轴</span><span id="endLabel">片段终点</span></div></footer>
+</main></div>
+<script>/* APP_JS */</script>
+</body></html>
