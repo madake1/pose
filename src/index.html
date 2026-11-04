@@ -2,11 +2,11 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>POSE LAB · 位姿投影工作台</title><style>/* APP_CSS */</style></head>
 <body>
-<header><div class="brand"><span class="brand-mark">P</span><strong>POSE LAB</strong><span class="brand-sub">位姿投影工作台</span></div><div class="header-right"><span class="local-dot"></span> 本地 · 离线运行 <button id="exportConfig">导出参数</button><label class="button">导入参数<input id="importConfig" type="file" accept=".json" hidden></label><button id="resetConfig" class="quiet">恢复推荐参数</button></div></header>
+<header><div class="brand"><span class="brand-mark">P</span><strong>POSE LAB</strong><span class="brand-sub">位姿投影工作台</span></div><div class="header-right"><span class="local-dot"></span> 本地 · 离线运行 <button id="resetConfig" class="quiet">恢复推荐参数</button></div></header>
 <div class="app">
 <aside><div class="side-heading"><span>控制台</span><span class="micro">PARAMETERS</span></div>
 <section class="files"><div class="section-label">01 <b>数据源</b></div><div class="file-actions"><label class="file-button">＋ 选择 TXT<input id="logFiles" type="file" accept=".txt" multiple hidden></label><label class="file-button">＋ 选择视频<input id="videoFile" type="file" accept="video/*,.mp4,.mov" hidden></label></div><select id="logSelect" aria-label="当前日志"><option>尚未选择日志</option></select><select id="segmentSelect" aria-label="日志时间片段" hidden></select><div id="fileInfo" class="hint">文件仅在本机读取，无需上传。</div><div id="videoInfo" class="hint ellipsis">尚未选择视频</div><progress id="parseProgress" value="0" max="1" hidden></progress></section>
-<section class="recommendation"><div class="section-label">日志推荐摆位</div><div id="recommendInfo" class="hint">读取日志后自动推荐相机视轴与视场角；器械朝向直接使用日志。</div><button id="restorePose">恢复推荐摆位</button><div class="hint">几何推荐 · 未经视频标定。恢复时保留时间对齐。</div></section><div id="parameters"></div>
+<section class="recommendation"><div class="section-label">日志推荐摆位</div><div id="recommendInfo" class="hint">读取日志后自动推荐相机视轴与视场角；器械朝向直接使用日志。</div><div class="pose-actions"><button id="restorePose">恢复推荐摆位</button><button id="exportConfig">导出参数</button><label class="button" tabindex="0" role="button" id="importConfigButton">导入参数<input id="importConfig" type="file" accept=".json,application/json" hidden></label></div><div id="configStatus" class="hint" role="status">导出时选择保存文件夹；参数自动记忆在本浏览器。</div><div class="hint">几何推荐 · 未经视频标定。恢复时保留时间对齐。</div></section><div id="parameters"></div>
 <section class="status-section"><div class="section-label">状态 / 当前采样</div><div id="armStatus"></div><div id="readout" class="hint">加载日志后显示位姿。</div></section>
 <div class="sidebar-foot">32767 自动隐藏 · 无效区间不插值<br>安装偏移使用各自局部坐标；旋转为 XYZ。</div>
 </aside>

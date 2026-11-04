@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {STRIDE,clock,parseClock,sampleArm,correction,intrinsicsCamera,jawOpening,cameraFrames,validArm,logCoverage,logTimeAtVideo,videoTimeAtLog,elapsed} from './core.js';
 import {recommendSetup} from './recommend.js';
+import {CONFIG_STORAGE_KEY,configurationDocument,readConfiguration,saveConfigurationToDirectory} from './config.js';
 
 const $=id=>document.getElementById(id);
 const defaults={
@@ -14,8 +15,22 @@ const defaults={
   sync:{zero:'18:30:37.317',offset:0,rate:1}
 };
 let cfg=structuredClone(defaults);
-const state={data:null,segments:[],recommendations:[],segment:0,cameraStart:null,t:parseClock(defaults.sync.zero),row:-1,logCovered:false,files:[],worker:null,videoURL:null,videoReady:false,playing:false,videoSeeking:false,pendingSeek:null,requestId:0,manualOverlay:true,demo:false,lastFrame:0,lastVideoFrame:0,dirty:true,camValid:false,poses:[],frameTime:0};
+const state={data:null,segments:[],recommendations:[],segment:0,cameraStart:null,t:parseClock(defaults.sync.zero),row:-1,logCovered:false,files:[],worker:null,videoURL:null,videoReady:false,playing:false,videoSeeking:false,pendingSeek:null,requestId:0,manualOverlay:true,keepParameters:false,demo:false,lastFrame:0,lastVideoFrame:0,dirty:true,camValid:false,poses:[],frameTime:0};
 const controlsMap=new Map();
+let rememberTimer;
+function captureConfiguration(){return configurationDocument(cfg,{speed:+$('speed').value,overlay:state.manualOverlay});}
+function rememberNow(message='当前参数已自动记忆；下次读取日志保留这些参数。'){
+  clearTimeout(rememberTimer);state.keepParameters=true;
+  try{localStorage.setItem(CONFIG_STORAGE_KEY,JSON.stringify(captureConfiguration()));$('configStatus').textContent=message;}
+  catch{$('configStatus').textContent='当前参数已保留，但浏览器无法自动记忆；请导出 JSON 文件保存。';}
+}
+function rememberSoon(){state.keepParameters=true;clearTimeout(rememberTimer);rememberTimer=setTimeout(()=>rememberNow(),300);}
+function applyConfiguration(document){
+  const next=readConfiguration(document,defaults,controlsMap);
+  pause();cfg=next.config;state.keepParameters=true;state.manualOverlay=next.view.overlay;$('toggleOverlay').textContent=state.manualOverlay?'隐藏投影':'显示投影';$('speed').value=next.view.speed;video.playbackRate=next.view.speed;
+  buildParameters();applyObserver();updateSyncBadge();configureTimeline();if(state.videoReady&&isMapped())syncFromVideo();else if(!state.data&&isMapped())state.t=logFromVideo(0);
+  state.dirty=true;
+}
 const get=path=>path.split('.').reduce((v,k)=>v[k],cfg);
 function put(path,value){const keys=path.split('.'),key=keys.pop();keys.reduce((v,k)=>v[k],cfg)[key]=value;}
 function notice(text,error=false){$('notice').textContent=text;$('notice').classList.toggle('error',error);}
@@ -32,7 +47,7 @@ function number(parent,label,path,min,max,step,unit='') {
 }
 function check(parent,label,path){const el=document.createElement('label');el.className='check-control';const text=document.createElement('span');text.textContent=label;const input=document.createElement('input');input.type='checkbox';input.checked=get(path);input.onchange=()=>{put(path,input.checked);changed(path);};el.append(text,input);parent.append(el);controlsMap.set(path,{input});}
 function select(parent,label,path,options){const el=document.createElement('div');el.className='control';const labelEl=document.createElement('label');labelEl.className='control-label';labelEl.textContent=label;const input=document.createElement('select');for(const [v,t]of options)input.add(new Option(t,v));input.value=get(path);input.onchange=()=>{put(path,input.value);changed(path);};el.append(labelEl,input);parent.append(el);controlsMap.set(path,{input,options:options.map(x=>x[0])});}
-function buttons(parent,items){const el=document.createElement('div');el.className='inline-buttons';for(const [text,fn]of items){const b=document.createElement('button');b.textContent=text;b.onclick=fn;el.append(b);}parent.append(el);}
+function buttons(parent,items){const el=document.createElement('div');el.className='inline-buttons';for(const [text,fn]of items){const b=document.createElement('button');b.textContent=text;b.onclick=()=>{fn();rememberSoon();};el.append(b);}parent.append(el);}
 function refreshControls(prefix=''){for(const [path,c]of controlsMap){if(!path.startsWith(prefix))continue;const v=get(path);if(document.activeElement!==c.input)c.input.type==='checkbox'?c.input.checked=v:c.input.value=v;if(c.range&&document.activeElement!==c.range)c.range.value=v;}}
 function buildParameters(){
   $('parameters').replaceChildren();controlsMap.clear();
@@ -130,11 +145,13 @@ function resetObserver(){const rec=state.recommendations[state.segment];setObser
 function applyObserver(){const p=cfg.observer,a=THREE.MathUtils.degToRad(p.azimuth),e=THREE.MathUtils.degToRad(p.elevation);orbit.target.set(p.x,p.y,p.z);observer.position.set(p.x+p.distance*Math.cos(e)*Math.sin(a),p.y-p.distance*Math.cos(e)*Math.cos(a),p.z+p.distance*Math.sin(e));const forward=orbit.target.clone().sub(observer.position).normalize(),right=new THREE.Vector3().crossVectors(forward,new THREE.Vector3(0,0,1)).normalize(),up=new THREE.Vector3().crossVectors(right,forward).normalize(),roll=THREE.MathUtils.degToRad(p.roll);observer.up.copy(up.multiplyScalar(Math.cos(roll)).addScaledVector(right,Math.sin(roll)));observer.lookAt(orbit.target);orbit.update();state.dirty=true;}
 let applyingObserver=false;
 orbit.addEventListener('change',()=>{if(applyingObserver)return;const d=observer.position.clone().sub(orbit.target),r=d.length();Object.assign(cfg.observer,{x:orbit.target.x,y:orbit.target.y,z:orbit.target.z,distance:r,azimuth:THREE.MathUtils.radToDeg(Math.atan2(d.x,-d.y)),elevation:THREE.MathUtils.radToDeg(Math.asin(d.z/r))});refreshControls('observer.');state.dirty=true;});
+orbit.addEventListener('end',rememberSoon);
 function fitTools(){const points=Object.values(tools).filter(t=>t.root.visible).map(t=>new THREE.Vector3().setFromMatrixPosition(t.root.matrix));if(!points.length)return;const center=points.reduce((v,p)=>v.add(p),new THREE.Vector3()).divideScalar(points.length);setObserver({x:center.x,y:center.y,z:center.z,distance:450});}
 function followCamera(){if(!state.camValid){notice('当前没有有效相机位姿。',true);return;}const forward=new THREE.Vector3(0,0,-1).transformDirection(optical.matrixWorld),pos=new THREE.Vector3().setFromMatrixPosition(optical.matrixWorld),target=pos.clone().addScaledVector(forward,250);orbit.target.copy(target);observer.position.copy(pos);observer.up.setFromMatrixColumn(optical.matrixWorld,1);observer.lookAt(target);orbit.update();state.dirty=true;}
 function changed(path){
   if(path.startsWith('observer.')){applyingObserver=true;applyObserver();applyingObserver=false;}
   if(path.startsWith('sync.')){pause();updateSyncBadge();configureTimeline();if(isMapped()&&state.videoReady)syncFromVideo();}
+  rememberSoon();
   state.dirty=true;
 }
 function sizeViews(){
@@ -231,7 +248,7 @@ function applyRecommended(full=false,announce=true){
   buildParameters();applyObserver();updateSyncBadge();state.dirty=true;
   $('recommendInfo').textContent=rec?.available?`推荐来源 ${clock(activeSegment()?.t0)}–${clock(activeSegment()?.t1)} · ${rec.pairs.toLocaleString()} 个有效相机—器械样本 · ${rec.column?'按列':'按行'}解释旋转矩阵。推荐视场角 ${rec.camera.fov.toFixed(1)}°；相机安装旋转 X ${rec.camera.rx.toFixed(1)}° / Y ${rec.camera.ry.toFixed(1)}° / Z ${rec.camera.rz.toFixed(1)}°。器械保持日志朝向。`:rec?.reason??'读取日志后自动推荐相机视轴与视场角；器械朝向直接使用日志。';
   configureTimeline();
-  if(announce)notice(`${full?'所有几何与显示参数':'摆位参数'}已恢复到当前日志的推荐值，保留视频时间对齐。${rec?.available?'推荐依据日志几何关系，尚未做视频标定。':''}`);
+  if(announce){rememberNow('已记住恢复后的推荐参数；后续读取日志不会自动覆盖。');notice(`${full?'所有几何与显示参数':'摆位参数'}已恢复到当前日志的推荐值，保留视频时间对齐。${rec?.available?'推荐依据日志几何关系，尚未做视频标定。':''}`);}
 }
 function activateSegment(index){state.segment=index;const seg=activeSegment();if(!seg)return;state.cameraStart=null;for(let row=seg.start;row<=seg.end;row++)if(validArm(state.data,row,1)){state.cameraStart=row;break;}$('segmentSelect').value=index;}
 function configureTimeline(){
@@ -241,7 +258,7 @@ function configureTimeline(){
   $('durationText').textContent=master?elapsed(video.duration):seg?`${(seg.t1-seg.t0).toFixed(2)} s`:'—';
   $('timelineHint').textContent=master?'视频全长 · 绝对时间同步 · 缺口不暂停':'日志片段时间轴';
 }
-function setSegment(index,seek=true){activateSegment(index);const seg=activeSegment();if(!seg)return;state.t=seg.t0;applyRecommended(false,false);configureTimeline();if(seek)seekLog(seg.t0);state.dirty=true;}
+function setSegment(index,seek=true){activateSegment(index);const seg=activeSegment();if(!seg)return;state.t=seg.t0;if(!state.keepParameters)applyRecommended(false,false);else $('recommendInfo').textContent='继续使用已保存 / 导入 / 调整的参数，读取日志不覆盖。需要重新推荐时点击“恢复推荐摆位”。';configureTimeline();if(seek)seekLog(seg.t0);state.dirty=true;}
 function initializeTime(){
   if(!state.data){if(state.videoReady&&isMapped())syncFromVideo();configureTimeline();return;}
   const target=state.videoReady&&isMapped()?logFromVideo(video.currentTime):isMapped()?logFromVideo(0):state.segments[0].t0;
@@ -282,7 +299,7 @@ function syncFromVideo(time=video.currentTime){
   if(coverage&&coverage.segment!==state.segment)activateSegment(coverage.segment);
   state.dirty=true;
 }
-function alignCurrent(){if(!state.data||!state.videoReady){notice('请先载入日志与视频，再进行时间对齐。',true);return;}pause();cfg.sync.zero=clock(state.t-video.currentTime*cfg.sync.rate-cfg.sync.offset);$('zeroTime').value=cfg.sync.zero;updateSyncBadge();notice(`已将视频 ${video.currentTime.toFixed(3)} 秒对应到日志 ${clock(state.t)}。请在其他时刻检查。`);state.dirty=true;}
+function alignCurrent(){if(!state.data||!state.videoReady){notice('请先载入日志与视频，再进行时间对齐。',true);return;}pause();cfg.sync.zero=clock(state.t-video.currentTime*cfg.sync.rate-cfg.sync.offset);$('zeroTime').value=cfg.sync.zero;updateSyncBadge();rememberSoon();notice(`已将视频 ${video.currentTime.toFixed(3)} 秒对应到日志 ${clock(state.t)}。请在其他时刻检查。`);state.dirty=true;}
 function pause(){state.playing=false;video.pause();$('play').textContent='▶';state.dirty=true;}
 async function play(){
   if(state.playing){pause();return;}
@@ -305,11 +322,19 @@ video.addEventListener('timeupdate',()=>{if(!('requestVideoFrameCallback'in vide
 video.addEventListener('ended',pause);video.addEventListener('error',()=>{state.videoReady=false;pause();notice('浏览器无法读取该视频编码。请选择兼容视频，或转换为 H.264 MP4 后重试。',true);});
 if('requestVideoFrameCallback'in video){const frame=(now,meta)=>{state.lastVideoFrame=now;if(!state.videoSeeking){state.frameTime=meta.mediaTime;syncFromVideo(meta.mediaTime);state.dirty=true;}video.requestVideoFrameCallback(frame);};video.requestVideoFrameCallback(frame);}
 $('timeline').addEventListener('input',e=>{pause();if(state.videoReady&&isMapped())seekLog(logFromVideo(+e.target.value));else if(activeSegment())seekLog(activeSegment().t0+ +e.target.value);});
-$('play').onclick=play;$('stepBack').onclick=()=>step(-1);$('stepForward').onclick=()=>step(1);$('speed').onchange=()=>video.playbackRate=+$('speed').value;
-$('homeView').onclick=resetObserver;$('muteVideo').onclick=()=>{video.muted=!video.muted;$('muteVideo').textContent=video.muted?'静音':'有声';};
-$('toggleOverlay').onclick=()=>{state.manualOverlay=!state.manualOverlay;$('toggleOverlay').textContent=state.manualOverlay?'隐藏投影':'显示投影';state.dirty=true;};
-$('exportConfig').onclick=()=>{const text=JSON.stringify({schema:'pose-lab-v1',config:cfg},null,2),url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='pose-lab-parameters.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('importConfig').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const doc=JSON.parse(await file.text());if(doc.schema!=='pose-lab-v1'||!doc.config)throw Error('不支持的参数文件');const next=structuredClone(defaults);for(const [path,c]of controlsMap){const value=path.split('.').reduce((v,k)=>v?.[k],doc.config);if(value===undefined)continue;const old=get(path);if(typeof value!==typeof old||(typeof value==='number'&&(!Number.isFinite(value)||value<c.min||value>c.max))||(c.options&&!c.options.includes(value)))throw Error(`参数 ${path} 无效或超出范围`);const keys=path.split('.'),key=keys.pop();keys.reduce((v,k)=>v[k],next)[key]=value;}const zero=doc.config.sync?.zero??'';if(typeof zero!=='string'||(zero&&!Number.isFinite(parseClock(zero))))throw Error('时间映射无效');next.sync.zero=zero;pause();cfg=next;buildParameters();applyObserver();updateSyncBadge();configureTimeline();if(state.videoReady&&isMapped())syncFromVideo();state.dirty=true;notice('参数已导入；文件仍从本机选择。');}catch(err){notice(`参数导入失败：${err.message}`,true);}e.target.value='';};
+$('play').onclick=play;$('stepBack').onclick=()=>step(-1);$('stepForward').onclick=()=>step(1);$('speed').onchange=()=>{video.playbackRate=+$('speed').value;rememberSoon();};
+$('homeView').onclick=()=>{resetObserver();rememberSoon();};$('muteVideo').onclick=()=>{video.muted=!video.muted;$('muteVideo').textContent=video.muted?'静音':'有声';};
+$('toggleOverlay').onclick=()=>{state.manualOverlay=!state.manualOverlay;$('toggleOverlay').textContent=state.manualOverlay?'隐藏投影':'显示投影';state.dirty=true;rememberSoon();};
+$('exportConfig').onclick=async()=>{
+  const button=$('exportConfig');
+  if(typeof window.showDirectoryPicker!=='function'){notice('当前浏览器不支持选择保存文件夹。请使用桌面版 Edge / Chrome 打开本页面后导出。',true);return;}
+  const document=captureConfiguration();rememberNow();button.disabled=true;
+  try{const saved=await saveConfigurationToDirectory(document,options=>window.showDirectoryPicker(options));$('configStatus').textContent=`已导出：${saved.folder} / ${saved.name}`;notice('参数已保存到所选文件夹。下次导入该 JSON，读取日志后会继续使用这些参数。');}
+  catch(e){if(e.name==='AbortError')$('configStatus').textContent='已取消导出；当前参数仍保留。';else notice(`导出失败：${e.message}。可尝试用桌面版 Edge / Chrome 打开本地 HTML 后重试。`,true);}
+  finally{button.disabled=false;}
+};
+$('importConfig').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{applyConfiguration(JSON.parse(await file.text()));rememberNow(`已导入 ${file.name}；后续读取日志保留这些参数。`);notice('参数已导入并应用，读取 TXT 或视频不会覆盖。请重新选择本地数据文件。');}catch(err){notice(`参数导入失败：${err.message}`,true);}e.target.value='';};
+$('importConfigButton').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('importConfig').click();}};
 $('resetConfig').onclick=()=>applyRecommended(true);
 $('restorePose').onclick=()=>applyRecommended(false);
 document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))return;if(e.code==='Space'){e.preventDefault();play();}if(e.code==='ArrowLeft'){e.preventDefault();step(-1);}if(e.code==='ArrowRight'){e.preventDefault();step(1);}});
@@ -320,6 +345,10 @@ $('loadDemo').onclick=()=>{
   if(cfg.convention.column)for(let i=0;i<count;i++)for(let arm=0;arm<4;arm++){const a=i*STRIDE+2+arm*16+4;for(const [u,v]of [[1,3],[2,6],[5,7]])[data[a+u],data[a+v]]=[data[a+v],data[a+u]];}
   installData({data,segments:[{start:0,end:count-1,t0:start,t1:start+(count-1)/60}],count,bad:0,demo:true},'合成演示');resetObserver();
 };
-buildParameters();applyObserver();sizeViews();updateSyncBadge();
+buildParameters();
+try{const saved=localStorage.getItem(CONFIG_STORAGE_KEY);if(saved){applyConfiguration(JSON.parse(saved));$('configStatus').textContent='已恢复上次参数；选择 TXT / 视频后继续使用，亦可导入其他参数文件。';}}
+catch{$('configStatus').textContent='未能读取上次参数，请选择 JSON 导入。';}
+applyObserver();sizeViews();updateSyncBadge();
+window.addEventListener('pagehide',()=>{if(state.keepParameters)rememberNow();});
 function tick(now){requestAnimationFrame(tick);if(state.playing&&state.videoReady&&!state.videoSeeking&&now-state.lastVideoFrame>120){state.frameTime=video.currentTime;syncFromVideo();state.dirty=true;}if(state.playing&&!state.videoReady&&state.data){const dt=Math.min(.1,(now-state.lastFrame)/1000)*+$('speed').value;state.lastFrame=now;state.t+=dt;const seg=activeSegment();if(state.t>=seg.t1){state.t=seg.t1;pause();}state.dirty=true;}if(state.dirty)render();}
 requestAnimationFrame(tick);

@@ -1,0 +1,9 @@
+{
+  "schema": "pose-lab-v1",
+  "config": {
+    "camera": {"rx": 23, "fov": 77},
+    "arms": {"1": {"length": 333, "jaw": 35}},
+    "sync": {"zero": "18:30:37.317", "offset": 0.123, "rate": 1}
+  },
+  "view": {"speed": 0.5, "overlay": false}
+}
