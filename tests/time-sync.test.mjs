@@ -3,6 +3,13 @@ import assert from 'node:assert/strict';
 import {STRIDE,parseClock,clock,elapsed,logTimeAtVideo,videoTimeAtLog,logCoverage} from '../src/core.js';
 const sync={zero:'18:30:37.317',offset:0,rate:1};
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} vs ${b}`);
+test('different video starts and durations map independently to their own log intervals',()=>{
+  for(const [zero,duration,offset,rate]of [['09:12:03.456',12.5,0,1],['14:50:10.000',7200.25,.125,1.001],['18:30:37.317',3991,0,1]]){
+    const timing={zero,offset,rate},start=parseClock(zero)+offset,end=start+duration*rate;
+    near(logTimeAtVideo(0,timing),start);near(logTimeAtVideo(duration,timing),end);
+    near(videoTimeAtLog(start,timing),0);near(videoTimeAtLog(end,timing),duration);
+  }
+});
 function samples(times,serials=times.map((_,i)=>i+1)){const d=new Float64Array(times.length*STRIDE);times.forEach((t,i)=>{d[i*STRIDE]=t;d[i*STRIDE+1]=serials[i];});return d;}
 test('absolute clock accepts Chinese colons and maps video endpoints without exact log timestamps',()=>{
   near(parseClock('18：30：37：317'),parseClock(sync.zero));near(videoTimeAtLog(parseClock('18:39:11.087'),sync),513.770);

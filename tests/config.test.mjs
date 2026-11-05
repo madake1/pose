@@ -18,6 +18,15 @@ test('invalid import is rejected without mutating the current/default parameters
   bad.config.camera.fov=65;bad.config.sync.zero='bad time';assert.throws(()=>readConfiguration(bad,defaults,controls),/时间无效/);
   assert.throws(()=>readConfiguration({schema:'pose-lab-v1',config:'bad'},defaults,controls),/不支持/);
 });
+
+test('an unset start and a different video start both survive configuration import',()=>{
+  const blankDefaults=structuredClone(defaults);blankDefaults.sync.zero='';
+  const blank=readConfiguration({schema:'pose-lab-v1',config:{}},blankDefaults,controls);
+  assert.equal(blank.config.sync.zero,'');
+  const other=configurationDocument(blankDefaults);other.config.sync.zero='09:12:03.456';
+  assert.equal(readConfiguration(other,blankDefaults,controls).config.sync.zero,'09:12:03.456');
+  assert.equal(blankDefaults.sync.zero,'');
+});
 test('folder export writes a new JSON and closes it; an earlier export is preserved',async()=>{
   const existing=new Map([['parameters.json','previous parameters']]);let picked=false,closed=false;
   const result=await saveConfigurationToDirectory(configurationDocument(defaults),async options=>{assert.equal(options.mode,'readwrite');picked=true;return {name:'chosen-folder',async getFileHandle(name,options){if(!existing.has(name)&&!options?.create)throw Object.assign(Error(),{name:'NotFoundError'});return {async createWritable(){return {async write(text){existing.set(name,text);},async close(){closed=true;}};}};}};},'parameters.json');

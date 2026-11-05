@@ -12,10 +12,10 @@ const defaults={
   bases:Object.fromEntries([1,2,3,4].map(n=>[n,{x:0,y:0,z:0,rx:0,ry:0,rz:0}])),
   arms:Object.fromEntries([1,3,4].map(n=>[n,{visible:true,x:0,y:0,z:0,rx:0,ry:0,rz:0,length:220,radius:3,jaw:22,width:2.2}])),
   display:{axes:true,frustum:true,directions:true,style:'outline',opacity:70,labels:true},
-  sync:{zero:'18:30:37.317',offset:0,rate:1}
+  sync:{zero:'',offset:0,rate:1}
 };
 let cfg=structuredClone(defaults);
-const state={data:null,segments:[],recommendations:[],segment:0,cameraStart:null,t:parseClock(defaults.sync.zero),row:-1,logCovered:false,files:[],worker:null,videoURL:null,videoReady:false,playing:false,videoSeeking:false,pendingSeek:null,requestId:0,manualOverlay:true,keepParameters:false,demo:false,lastFrame:0,lastVideoFrame:0,dirty:true,camValid:false,poses:[],frameTime:0};
+const state={data:null,segments:[],recommendations:[],segment:0,cameraStart:null,t:0,row:-1,logCovered:false,files:[],worker:null,videoURL:null,videoReady:false,playing:false,videoSeeking:false,pendingSeek:null,requestId:0,manualOverlay:true,keepParameters:false,demo:false,lastFrame:0,lastVideoFrame:0,dirty:true,camValid:false,poses:[],frameTime:0};
 const controlsMap=new Map();
 let rememberTimer;
 function captureConfiguration(){return configurationDocument(cfg,{speed:+$('speed').value,overlay:state.manualOverlay});}
@@ -78,12 +78,14 @@ function buildParameters(){
     for(const k of ['rx','ry','rz'])number(inst,`安装旋转 ${k.slice(1).toUpperCase()}`,`${p}.${k}`,-180,180,.1,'°');
   }
   note(inst,'朝向随日志逐帧更新。模型原点为夹爪铰链，杆沿 −Z，夹爪沿 +Z。日志角按总开口弧度解释，两爪各转一半；负角按闭合显示。');
-  const sync=addGroup('视频与日志对齐','06',true);
-  const e=document.createElement('div');e.className='control';e.innerHTML='<label class="control-label" for="zeroTime">视频起始绝对时间（视频 00:00）</label><input id="zeroTime" type="text" placeholder="18:30:37.317" autocomplete="off">';sync.append(e);
+  const sync=addGroup('当前视频 · 时间参数','01',true);
+  $('parameters').prepend(sync);
+  const e=document.createElement('div');e.className='control';e.innerHTML='<label class="control-label" for="zeroTime">视频起始绝对时间（视频 00:00）</label><input id="zeroTime" type="text" placeholder="输入当前视频起点 HH:mm:ss.SSS" autocomplete="off">';sync.append(e);
   $('zeroTime').value=cfg.sync.zero;$('zeroTime').onchange=()=>{const v=$('zeroTime').value.trim();if(v&&!Number.isFinite(parseClock(v))){notice('时间格式应为 HH:mm:ss.SSS。',true);return;}cfg.sync.zero=v;changed('sync.zero');};
   number(sync,'时间微调','sync.offset',-120,120,.001,'秒');number(sync,'时钟比例','sync.rate',.98,1.02,.000001,'日志秒 / 视频秒');
   buttons(sync,[['用当前画面对齐',()=>alignCurrent()],['跳至片段起点',()=>seekLog(activeSegment()?.t0??state.t)]]);
-  note(sync,'本批视频从 18:30:37.317 开始。按绝对时间相减，不要求日志存在同一条时间戳。多选 TXT 可自动衔接；缺失日志时继续视频、隐藏投影。');
+  note(sync,'每段视频分别设置起始绝对时间；更换视频后重新设置，或导入该视频的参数。持续时间自动读取当前视频，无需填写。多选 TXT 可按绝对时间自动衔接。');
+  const duration=document.createElement('div');duration.id='videoTiming';duration.className='grip-readout';duration.style.whiteSpace='pre-line';sync.append(duration);updateVideoTiming();
   const timing=document.createElement('div');timing.id='syncReadout';timing.className='grip-readout';timing.style.whiteSpace='pre-line';sync.append(timing);
   const absolute=document.createElement('div');absolute.className='control';absolute.innerHTML='<label class="control-label" for="absoluteSeek">跳至绝对时间</label><input id="absoluteSeek" type="text" placeholder="例如 18:40:00.000"><button id="seekAbsolute" style="margin-top:6px">跳转</button>';sync.append(absolute);
   $('seekAbsolute').onclick=()=>{const t=parseClock($('absoluteSeek').value);if(!Number.isFinite(t)){notice('请输入有效的绝对时间，例如 18:40:00.000。',true);return;}pause();seekLog(t);};
@@ -217,7 +219,11 @@ function logFromVideo(t){return logTimeAtVideo(t,cfg.sync);}
 function videoFromLog(t){return videoTimeAtLog(t,cfg.sync);}
 function withinVideo(t){if(!isMapped()||!state.videoReady)return false;const v=videoFromLog(t);return v>=-.001&&v<=video.duration+.001;}
 function updateSyncBadge(){const ok=isMapped();$('syncBadge').textContent=ok?`视频起点 ${clock(logFromVideo(0))}`:'尚未对齐';$('syncBadge').classList.toggle('warn',!ok);}
+function updateVideoTiming(){
+  $('videoTiming').textContent=state.videoReady?`视频持续时间 ${elapsed(video.duration)}（自动读取）\n${isMapped()?`结束绝对时间 ${clock(logFromVideo(video.duration))}`:'设置起始时间后显示结束绝对时间'}`:'选择视频后自动读取持续时间';
+}
 function updateReadouts(){
+  updateVideoTiming();
   $('logClock').textContent=(state.data||(state.videoReady&&isMapped()))?clock(state.t):'—';$('sampleText').textContent=state.data?state.row>=0?`${(state.row+1).toLocaleString()} / ${(state.data.length/STRIDE).toLocaleString()}`:'当前无日志':'等待日志';
   const seg=activeSegment();if(state.videoReady&&isMapped())$('timeline').value=THREE.MathUtils.clamp(videoFromLog(state.t),0,video.duration);else if(seg)$('timeline').value=state.t-seg.t0;
   const sampleTime=state.row>=0?state.data[state.row*STRIDE]:NaN;
@@ -314,8 +320,9 @@ function step(direction){pause();if(state.videoReady)requestVideoSeek(THREE.Math
 $('logFiles').onchange=e=>{const files=[...e.target.files].sort((a,b)=>a.name.localeCompare(b.name));if(!files.length)return;state.files=files;$('logSelect').replaceChildren();if(files.length>1)$('logSelect').add(new Option('全部日志 · 按绝对时间自动衔接','all'));files.forEach((f,i)=>$('logSelect').add(new Option(f.name,i)));loadLog(files.length>1?'all':'0');};
 $('logSelect').onchange=e=>loadLog(e.target.value);
 $('segmentSelect').onchange=e=>{pause();setSegment(+e.target.value);};
-$('videoFile').onchange=e=>{const file=e.target.files[0];if(!file)return;pause();state.videoReady=false;state.videoSeeking=false;state.pendingSeek=null;if(state.videoURL)URL.revokeObjectURL(state.videoURL);state.videoURL=URL.createObjectURL(file);video.src=state.videoURL;video.load();$('videoInfo').textContent=`${file.name} · ${(file.size/1024**3).toFixed(2)} GB`;$('videoState').textContent='读取元数据…';};
+$('videoFile').onchange=e=>{const file=e.target.files[0];if(!file)return;pause();state.videoReady=false;state.videoSeeking=false;state.pendingSeek=null;if(state.videoURL){URL.revokeObjectURL(state.videoURL);cfg.sync=structuredClone(defaults.sync);$('zeroTime').value=cfg.sync.zero;refreshControls('sync.');rememberNow('已切换视频，请设置新视频的起始时间，或导入对应参数。');}updateSyncBadge();configureTimeline();updateVideoTiming();state.videoURL=URL.createObjectURL(file);video.src=state.videoURL;video.load();$('videoInfo').textContent=`${file.name} · ${(file.size/1024**3).toFixed(2)} GB`;$('videoState').textContent='读取元数据…';notice(isMapped()?`视频起点使用 ${cfg.sync.zero}，请确认该时间属于当前视频。`:'请在“当前视频 · 时间参数”中输入该视频的起始绝对时间。');e.target.value='';};
 video.addEventListener('loadedmetadata',()=>{state.videoReady=true;state.frameTime=video.currentTime;imageW=video.videoWidth||1920;imageH=video.videoHeight||1080;$('resolutionLabel').textContent=`${imageW} × ${imageH}`;$('videoState').textContent=`${imageW} × ${imageH} · ${video.duration.toFixed(2)} s`;sizeViews();initializeTime();});
+video.addEventListener('durationchange',()=>{if(state.videoReady&&Number.isFinite(video.duration)){configureTimeline();state.dirty=true;}});
 video.addEventListener('loadeddata',()=>state.dirty=true);
 video.addEventListener('seeked',()=>{state.videoSeeking=false;if(state.pendingSeek!==null&&Math.abs(state.pendingSeek-video.currentTime)>.0001){const t=state.pendingSeek;state.pendingSeek=null;requestVideoSeek(t);return;}state.pendingSeek=null;state.frameTime=video.currentTime;syncFromVideo();state.dirty=true;});
 video.addEventListener('timeupdate',()=>{if(!('requestVideoFrameCallback'in video)&&!state.videoSeeking)syncFromVideo();state.dirty=true;});
@@ -333,7 +340,7 @@ $('exportConfig').onclick=async()=>{
   catch(e){if(e.name==='AbortError')$('configStatus').textContent='已取消导出；当前参数仍保留。';else notice(`导出失败：${e.message}。可尝试用桌面版 Edge / Chrome 打开本地 HTML 后重试。`,true);}
   finally{button.disabled=false;}
 };
-$('importConfig').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{applyConfiguration(JSON.parse(await file.text()));rememberNow(`已导入 ${file.name}；后续读取日志保留这些参数。`);notice('参数已导入并应用，读取 TXT 或视频不会覆盖。请重新选择本地数据文件。');}catch(err){notice(`参数导入失败：${err.message}`,true);}e.target.value='';};
+$('importConfig').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{applyConfiguration(JSON.parse(await file.text()));rememberNow(`已导入 ${file.name}；后续读取日志保留这些参数。`);notice('参数已导入并应用。更换视频会清空时间对齐，请先选择视频再导入对应参数。');}catch(err){notice(`参数导入失败：${err.message}`,true);}e.target.value='';};
 $('importConfigButton').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('importConfig').click();}};
 $('resetConfig').onclick=()=>applyRecommended(true);
 $('restorePose').onclick=()=>applyRecommended(false);
